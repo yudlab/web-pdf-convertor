@@ -1,6 +1,7 @@
 const { exec } = require("child_process");
 var fs = require("fs");
 const archiver = require("archiver");
+require('dotenv').config()
 
 function getIPAddress() {
   var interfaces = require("os").networkInterfaces();
@@ -21,10 +22,11 @@ function getIPAddress() {
 }
 
 const config = {
-  libreOfficeExe:
-    "C:\\www\\portable-apps\\LibreOfficePortablePrevious\\LibreOfficePortablePrevious.exe",
+  libreOfficeExe: process.env.LIBREOFFICE_EXE,
   server_address: `http://${getIPAddress()}:3000`,
 };
+
+console.error("Serving web service at: ", config.server_address);
 
 const pathSeparator = (path) => {
   return path.replace(/\//g, `\\`);
