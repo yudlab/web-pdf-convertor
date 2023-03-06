@@ -3,11 +3,7 @@ const router = express.Router();
 const upload = require('../helpers/uploader');
 const uploadController = require('../controllers/upload.controller');
 
-router.get('/',                                           uploadController.index);
-router.post('/upload-single',   upload.single('file'),    uploadController.uploadSingle);
-router.post('/upload-multiple', upload.array('files', 5), uploadController.uploadMultiple);
-
-/* ------------------------ upload and error handling ----------------------- */
-router.post('/upload-single-v2',                          uploadController.uploadSingleV2);
+router.get('/', uploadController.index);
+router.post('/upload-multiple', upload.array('files', 50), uploadController.uploadMultiple);
 
 module.exports = router;

@@ -3,56 +3,38 @@
         <div class="col-sm-8 offset-2"> 
             {{#each message}}
                 <p class="alert alert-{{@key}}">{{ this.[0] }}</p>
+                <p><a href="{{this.[1]}}">{{ this.[1] }}</a></p>
+                <p>{{ this.[2] }}</p>
             {{/each}}
             <div class="row">
                 <div class="col-md-4">
-                    <h6>Upload Single</h6>
+                    <h6>Upload</h6>
                 </div>
                 <div class="col-md-6">
-                    <form method="POST" action="/upload-single" enctype="multipart/form-data"> 
-                        <div class="input-group">
-                            <div class="custom-file">
-                                <input type="file" name="file" class="custom-file-input" id="inputFileSingle" required accept="image/*">
-                                <label class="custom-file-label" for="inputFileSingle">Choose file</label>
-                            </div>
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-primary float-right mr-2">Upload <i class="fa fa-upload"></i></button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <h6>Upload Multiple</h6>
-                </div>
-                <div class="col-md-6">
+                    <script type="text/javascript">
+                        updateList = function() {
+                            var input = document.getElementById('inputFileMultiple');
+                            var output = document.getElementById('fileList');
+                            var children = "";
+                            for (var i = 0; i < input.files.length; ++i) {
+                                children += '<li>' + input.files.item(i).name + '</li>';
+                            }
+                            output.innerHTML = '<ul>'+children+'</ul>';
+                        }
+                    </script>
                     <form method="POST" action="/upload-multiple" enctype="multipart/form-data"> 
                         <div class="input-group">
                             <div class="custom-file">
-                                <input type="file" name="files" class="custom-file-input" id="inputFileMultiple" required accept="image/*" multiple>
+                                <input type="file" name="files" class="custom-file-input" id="inputFileMultiple" required multiple onchange="javascript:updateList()">
                                 <label class="custom-file-label" for="inputFileMultiple">Choose file</label>
                             </div>
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-primary float-right mr-2">Upload <i class="fa fa-upload"></i></button>
                             </div>
                         </div>
-                    </form>
-                </div>
-            </div> 
-            <div class="row">
-                <div class="col-md-4">
-                    <h6>Upload Single (Error Handling)</h6>
-                </div>
-                <div class="col-md-6">
-                    <form method="POST" action="/upload-single-v2" enctype="multipart/form-data"> 
-                        <div class="input-group">
+                        <div class="col-md-6">
                             <div class="custom-file">
-                                <input type="file" name="file" class="custom-file-input" id="inputFileSingle" required accept="image/*">
-                                <label class="custom-file-label" for="inputFileSingle">Choose file</label>
-                            </div>
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-primary float-right mr-2">Upload <i class="fa fa-upload"></i></button>
+                                <div id="fileList"></div>
                             </div>
                         </div>
                     </form>
