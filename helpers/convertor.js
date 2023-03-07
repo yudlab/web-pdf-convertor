@@ -1,7 +1,7 @@
 const { exec } = require("child_process");
 var fs = require("fs");
-const archiver = require("archiver");
 require('dotenv').config()
+const { zipper } = require("./zipper");
 
 function getIPAddress() {
   var interfaces = require("os").networkInterfaces();
@@ -29,7 +29,7 @@ const config = {
 console.error("Serving web service at: ", config.server_address);
 
 const pathSeparator = (path) => {
-  return path.replace(/\//g, `\\`);
+  return path.replace(/\\/g, `/`);
 };
 
 function execPromise(command) {
@@ -47,26 +47,6 @@ function execPromise(command) {
 
       resolve(stdout);
     });
-  });
-}
-
-/**
- * @param {String} sourceDir: /some/folder/to/compress
- * @param {String} outPath: /path/to/created.zip
- * @returns {Promise}
- */
-function zipDirectory(sourceDir, outPath) {
-  const archive = archiver("zip", { zlib: { level: 9 } });
-  const stream = fs.createWriteStream(outPath);
-
-  return new Promise((resolve, reject) => {
-    archive
-      .directory(sourceDir, false)
-      .on("error", (err) => reject(err))
-      .pipe(stream);
-
-    stream.on("close", () => resolve());
-    archive.finalize();
   });
 }
 
@@ -93,31 +73,33 @@ const convertor = (files, paths) => {
       resp.error = true;
       resp.error_message = "An error occured.(files)";
     } else {
-      let pdfDestination = pathSeparator(
-        process.cwd() + "/storage/uploads/PDFs"
-      );
-      let zipDestination = pathSeparator(process.cwd() + "/public/zip");
-      let zipName = getZipName();
-      let fullZipFilename = zipDestination + "/" + zipName;
-      console.log(fullZipFilename);
-      for (var i = 0; i < files.length; i++) {
-        let fullPath = pathSeparator(
-          process.cwd() + "/storage/uploads/" + files[i].filename
+      if(files.length > 1) {
+        let pdfDestination = pathSeparator(
+          process.cwd() + "/storage/uploads/PDFs"
         );
-        resp.nb_files = resp.nb_files + 1;
-        try {
-          resp.status = await execPromise(
-            `${config.libreOfficeExe} --headless --convert-to pdf --outdir "${pdfDestination}" "${fullPath}"`
+        let zipDestination = pathSeparator(process.cwd() + "/public/zip");
+        let zipName = getZipName();
+        let fullZipFilename = pathSeparator(zipDestination + "/" + zipName);
+        console.log(fullZipFilename);
+        for (var i = 0; i < files.length; i++) {
+          let fullPath = pathSeparator(
+            process.cwd() + "/storage/uploads/" + files[i].filename
           );
-          fs.unlinkSync(fullPath); //deletes the file.
-        } catch (error) {
-          resp.error = true;
-          resp.error_message = "An error occured: " + error;
+          try {
+            resp.status = await execPromise(
+              `${config.libreOfficeExe} --headless --convert-to pdf --outdir "${pdfDestination}" "${fullPath}"`
+            );
+            fs.unlinkSync(fullPath); //deletes the file.
+            resp.nb_files = resp.nb_files + 1;
+          } catch (error) {
+            resp.error = true;
+            resp.error_message = "An error occured: " + error;
+          }
         }
+        await zipper(pdfDestination, fullZipFilename);
+        resp.linkToZIP = pathSeparator(config.server_address + "/zip/" + zipName);
+        fs.rmSync(pdfDestination, { recursive: true, force: true });
       }
-      await zipDirectory(pdfDestination, fullZipFilename);
-      resp.linkToZIP = pathSeparator(config.server_address + "/zip/" + zipName);
-      fs.rmSync(pdfDestination, { recursive: true, force: true });
     }
     resolve(resp);
   });

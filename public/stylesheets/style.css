@@ -1,3 +1,32 @@
 a {
   color: #00B7FF;
 }
+
+#sub-main.hide {
+  display: none;
+}
+#loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  margin: 0 auto;
+
+}
+#loader span {
+  text-align: center;
+  margin-top: 1rem;
+}
+#loader.hide {
+  display: none;
+}
+.custom-file {
+  padding-top: 1rem;
+}
+#fileCount {
+  font-weight: bold;
+  color: green;
+}
+#fileList {
+  margin-top: 1rem;
+}

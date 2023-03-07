@@ -8,7 +8,7 @@
     "startup": "pm2 start ./bin/www && pm2 startup"
   },
   "dependencies": {
-    "archiver": "^5.3.1",
+    "adm-zip": "^0.5.10",
     "connect-flash": "^0.1.1",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",

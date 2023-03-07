@@ -1,9 +1,13 @@
 <main>
     <div class="row mb-2">
-        <div class="col-sm-8 offset-2"> 
+        <div id="loader" class="hide">
+            <img src="images/1488.gif" alt="loader" />
+            <span>Uploading</span>
+        </div>
+        <div id="sub-main" class="col-sm-8 offset-2"> 
             {{#each message}}
                 <p class="alert alert-{{@key}}">{{ this.[0] }}</p>
-                <p><a href="{{this.[1]}}">{{ this.[1] }}</a></p>
+                <p class="alert alert-{{@key}}"><a href="{{this.[1]}}">{{ this.[1] }}</a></p>
                 <p>{{ this.[2] }}</p>
             {{/each}}
             <div class="row">
@@ -16,10 +20,20 @@
                             var input = document.getElementById('inputFileMultiple');
                             var output = document.getElementById('fileList');
                             var children = "";
-                            for (var i = 0; i < input.files.length; ++i) {
+                            var i; 
+                            for (i = 0;i < input.files.length; ++i) {
                                 children += '<li>' + input.files.item(i).name + '</li>';
                             }
                             output.innerHTML = '<ul>'+children+'</ul>';
+                            $("#fileCount").text(`${i} ${i > 0 ? 'files' : 'file'} added.`);
+                        }
+                        addLoader = function() {
+                            if($('#fileList ul li').length > 0) {
+                                $('#sub-main').addClass('hide');
+                                $('#loader').removeClass('hide');
+                            } else {
+                                alert('Please select at least a file to upload');
+                            }
                         }
                     </script>
                     <form method="POST" action="/upload-multiple" enctype="multipart/form-data"> 
@@ -29,11 +43,12 @@
                                 <label class="custom-file-label" for="inputFileMultiple">Choose file</label>
                             </div>
                             <div class="input-group-append">
-                                <button type="submit" class="btn btn-primary float-right mr-2">Upload <i class="fa fa-upload"></i></button>
+                                <button type="submit" class="btn btn-primary float-right mr-2" onclick="javascript:addLoader()">Upload <i class="fa fa-upload"></i></button>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="custom-file">
+                                <span id="fileCount"></span>
                                 <div id="fileList"></div>
                             </div>
                         </div>
