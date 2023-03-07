@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www",
-    "startup": "pm2 start ./bin/www && pm2 startup"
+    "dev": "nodemon ./bin/www"
   },
   "dependencies": {
     "adm-zip": "^0.5.10",
