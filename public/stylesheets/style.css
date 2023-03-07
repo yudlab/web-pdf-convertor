@@ -1,9 +1,7 @@
 a {
   color: #00B7FF;
 }
-.h-100 {
-  height: 90%;
-}
+
 #sub-main.hide {
   display: none;
 }
@@ -13,7 +11,7 @@ a {
   justify-content: center;
   flex-direction: column;
   margin: 0 auto;
-  height: 100%;
+
 }
 #loader span {
   text-align: center;
@@ -21,4 +19,14 @@ a {
 }
 #loader.hide {
   display: none;
+}
+.custom-file {
+  padding-top: 1rem;
+}
+#fileCount {
+  font-weight: bold;
+  color: green;
+}
+#fileList {
+  margin-top: 1rem;
 }
