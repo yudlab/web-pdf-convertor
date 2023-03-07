@@ -7,14 +7,11 @@
         <div id="sub-main" class="col-sm-8 offset-2"> 
             {{#each message}}
                 <p class="alert alert-{{@key}}">{{ this.[0] }}</p>
-                <p class="alert alert-{{@key}}"><a href="{{this.[1]}}">{{ this.[1] }}</a></p>
+                <p class="alert alert-info"><a href="{{this.[1]}}">{{ this.[1] }}</a></p>
                 <p>{{ this.[2] }}</p>
             {{/each}}
             <div class="row">
-                <div class="col-md-4">
-                    <h6>Upload</h6>
-                </div>
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <script type="text/javascript">
                         updateList = function() {
                             var input = document.getElementById('inputFileMultiple');
@@ -25,7 +22,7 @@
                                 children += '<li>' + input.files.item(i).name + '</li>';
                             }
                             output.innerHTML = '<ul>'+children+'</ul>';
-                            $("#fileCount").text(`${i} ${i > 0 ? 'files' : 'file'} added.`);
+                            $("#fileCount, #upload-label").text(`${i} ${i > 0 ? 'files' : 'file'} added`);
                         }
                         addLoader = function() {
                             if($('#fileList ul li').length > 0) {
@@ -40,7 +37,7 @@
                         <div class="input-group">
                             <div class="custom-file">
                                 <input type="file" name="files" class="custom-file-input" id="inputFileMultiple" required multiple onchange="javascript:updateList()">
-                                <label class="custom-file-label" for="inputFileMultiple">Choose file</label>
+                                <label class="custom-file-label" for="inputFileMultiple" id="upload-label">Choose file</label>
                             </div>
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-primary float-right mr-2" onclick="javascript:addLoader()">Upload <i class="fa fa-upload"></i></button>

@@ -51,15 +51,16 @@ function execPromise(command) {
 }
 
 const getZipName = () => {
-  var today = new Date();
-  var dd = String(today.getDate());
-  var mm = String(today.getMonth() + 1); //January is 0!
+  const today = new Date();
+  var dd = today.getDate();
+  var mo = today.getMonth() + 1; //January is 0!
   var yyyy = today.getFullYear();
   var hh = today.getHours();
   var mm = today.getMinutes();
   var ss = today.getSeconds();
+  var ms = today.getMilliseconds();
 
-  return `${dd}-${mm}-${yyyy}-${hh}-${mm}-${ss}.zip`;
+  return `${dd < 9 ? `0` + dd : dd}-${mo < 9 ? `0` + mo : mo}-${yyyy}-${hh < 9 ? `0` + hh : hh}-${mm < 9 ? `0` + mm : mm}-${ss < 9 ? `0` + ss : ss}-${ms < 9 ? `0` + ms : ms}.zip`;
 };
 
 const convertor = (files, paths) => {
@@ -73,33 +74,34 @@ const convertor = (files, paths) => {
       resp.error = true;
       resp.error_message = "An error occured.(files)";
     } else {
-      if(files.length > 1) {
-        let pdfDestination = pathSeparator(
-          process.cwd() + "/storage/uploads/PDFs"
+      console.log(files);
+      let pdfDestination = pathSeparator(
+        process.cwd() + "/storage/uploads/PDFs"
+      );
+      let zipDestination = pathSeparator(process.cwd() + "/public/zip");
+      let zipName = getZipName();
+      let fullZipFilename = pathSeparator(zipDestination + "/" + zipName);
+
+      console.log(fullZipFilename);
+
+      for (var i = 0; i < files.length; i++) {
+        let fullPath = pathSeparator(
+          process.cwd() + "/storage/uploads/" + files[i].filename
         );
-        let zipDestination = pathSeparator(process.cwd() + "/public/zip");
-        let zipName = getZipName();
-        let fullZipFilename = pathSeparator(zipDestination + "/" + zipName);
-        console.log(fullZipFilename);
-        for (var i = 0; i < files.length; i++) {
-          let fullPath = pathSeparator(
-            process.cwd() + "/storage/uploads/" + files[i].filename
+        try {
+          resp.status = await execPromise(
+            `${config.libreOfficeExe} --headless --convert-to pdf --outdir "${pdfDestination}" "${fullPath}"`
           );
-          try {
-            resp.status = await execPromise(
-              `${config.libreOfficeExe} --headless --convert-to pdf --outdir "${pdfDestination}" "${fullPath}"`
-            );
-            fs.unlinkSync(fullPath); //deletes the file.
-            resp.nb_files = resp.nb_files + 1;
-          } catch (error) {
-            resp.error = true;
-            resp.error_message = "An error occured: " + error;
-          }
+          fs.unlinkSync(fullPath); //deletes the file.
+          resp.nb_files = resp.nb_files + 1;
+        } catch (error) {
+          resp.error = true;
+          resp.error_message = "An error occured: " + error;
         }
-        await zipper(pdfDestination, fullZipFilename);
-        resp.linkToZIP = pathSeparator(config.server_address + "/zip/" + zipName);
-        fs.rmSync(pdfDestination, { recursive: true, force: true });
       }
+      await zipper(pdfDestination, fullZipFilename);
+      resp.linkToZIP = pathSeparator(config.server_address + "/zip/" + zipName);
+      fs.rmSync(pdfDestination, { recursive: true, force: true });
     }
     resolve(resp);
   });
