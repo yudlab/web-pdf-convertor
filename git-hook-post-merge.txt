@@ -1,0 +1,13 @@
+1. touch .git/hooks/post-merge
+2. Add below to above file:
+#!/bin/bash
+
+# Check if package.json has been updated
+if [[ $(git diff-tree -r --name-only HEAD@{1} HEAD | grep package.json) ]]; then
+
+  # Run npm install
+  npm install
+fi
+3. Mark as executable:
+Linux: chmod +x .git/hooks/post-merge
+Windows: git update-index --chmod=+x .git/hooks/post-merge
