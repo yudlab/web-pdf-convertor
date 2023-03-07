@@ -1,3 +1,24 @@
 a {
   color: #00B7FF;
 }
+.h-100 {
+  height: 90%;
+}
+#sub-main.hide {
+  display: none;
+}
+#loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  margin: 0 auto;
+  height: 100%;
+}
+#loader span {
+  text-align: center;
+  margin-top: 1rem;
+}
+#loader.hide {
+  display: none;
+}

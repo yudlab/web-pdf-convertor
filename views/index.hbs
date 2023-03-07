@@ -1,6 +1,10 @@
 <main>
-    <div class="row mb-2">
-        <div class="col-sm-8 offset-2"> 
+    <div class="row mb-2 h-100">
+        <div id="loader" class="hide">
+            <img src="images/1488.gif" alt="loader" />
+            <span>Uploading</span>
+        </div>
+        <div id="sub-main" class="col-sm-8 offset-2"> 
             {{#each message}}
                 <p class="alert alert-{{@key}}">{{ this.[0] }}</p>
                 <p><a href="{{this.[1]}}">{{ this.[1] }}</a></p>
@@ -21,6 +25,14 @@
                             }
                             output.innerHTML = '<ul>'+children+'</ul>';
                         }
+                        addLoader = function() {
+                            if($('#fileList ul li').length > 0) {
+                                $('#sub-main').addClass('hide');
+                                $('#loader').removeClass('hide');
+                            } else {
+                                alert('Please select at least a file to upload');
+                            }
+                        }
                     </script>
                     <form method="POST" action="/upload-multiple" enctype="multipart/form-data"> 
                         <div class="input-group">
@@ -29,7 +41,7 @@
                                 <label class="custom-file-label" for="inputFileMultiple">Choose file</label>
                             </div>
                             <div class="input-group-append">
-                                <button type="submit" class="btn btn-primary float-right mr-2">Upload <i class="fa fa-upload"></i></button>
+                                <button type="submit" class="btn btn-primary float-right mr-2" onclick="javascript:addLoader()">Upload <i class="fa fa-upload"></i></button>
                             </div>
                         </div>
                         <div class="col-md-6">
