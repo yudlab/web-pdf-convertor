@@ -4,6 +4,7 @@ const fs_promises = require('fs').promises;
 require('dotenv').config()
 const { zipper, unzipper } = require("./zipper");
 const { convertToPDF } = require("./convertor");
+const path = require('path');
 
 function getIPAddress() {
   var interfaces = require("os").networkInterfaces();
@@ -69,6 +70,32 @@ const getZipName = () => {
   return `${dd < 9 ? `0` + dd : dd}-${mo < 9 ? `0` + mo : mo}-${yyyy}-${hh < 9 ? `0` + hh : hh}-${mm < 9 ? `0` + mm : mm}-${ss < 9 ? `0` + ss : ss}-${ms < 9 ? `0` + ms : ms}.zip`;
 };
 
+async function recursiveConvert(unconvertedPath, convertedPath, count) {
+  return new Promise(async function(resolve, reject) {
+    try {
+      let fileCount = count;
+      const files = await fs_promises.readdir(unconvertedPath);
+      for (const file of files) {
+        const filePathUnconverted = path.join(unconvertedPath, file);
+        const stat = await fs_promises.stat(filePathUnconverted);
+        if (stat.isDirectory()) {
+          let newDirConverted = path.join(convertedPath, file);
+          await createFolderIfNotExist(newDirConverted);
+          let thisCount = await recursiveConvert(filePathUnconverted, newDirConverted, count);
+          fileCount += thisCount;
+        } else {
+          await convertToPDF(filePathUnconverted, convertedPath);
+          fs.unlinkSync(filePathUnconverted); //deletes the file.
+          fileCount++
+        }
+      }
+      return resolve(fileCount);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 exports.filesHandler = function (files, paths) {
   return new Promise(async (resolve, reject) => {
     let resp = {
@@ -104,8 +131,11 @@ exports.filesHandler = function (files, paths) {
           await createFolderIfNotExist(folderNameUnconverted);
           await createFolderIfNotExist(zipFolder);
           await unzipper(fullPath, folderNameUnconverted);
-          //await recursiveConvert(folderNameUnconverted, zipFolder);
-          //create same structure and convert them.
+          let fileCount = await recursiveConvert(folderNameUnconverted, zipFolder, resp.nb_files);
+          console.log("filecount is: ", fileCount);
+          fs.rmSync(folderNameUnconverted, { recursive: true, force: true });
+          fs.unlinkSync(fullPath); //deletes the file.
+          resp.nb_files = resp.nb_files + fileCount;
         } else if(currentFile.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
           try {
             resp.status = await convertToPDF(fullPath, pdfDestination);
@@ -125,3 +155,5 @@ exports.filesHandler = function (files, paths) {
     resolve(resp);
   });
 };
+
+exports.createFolderIfNotExist = createFolderIfNotExist;

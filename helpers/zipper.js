@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 exports.zipper = async function (sourceDir, outPutFile) {
+    console.log("Zipper source: ", sourceDir);
     return new Promise(function (resolve, reject) {
         try {
             const zip = new AdmZip();
