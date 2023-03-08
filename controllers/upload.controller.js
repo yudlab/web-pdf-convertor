@@ -1,4 +1,8 @@
-const { filesHandler } = require("../helpers/filesHandler");
+const { filesHandler, createFolderIfNotExist } = require("../helpers/filesHandler");
+
+(async () => {
+    await createFolderIfNotExist(process.cwd() + "/storage/uploads/")
+})();
 
 exports.index = (req, res) => {
     return res.render('index', { message: req.flash() });

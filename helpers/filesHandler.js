@@ -35,19 +35,23 @@ const pathSeparator = (path) => {
 };
 
 async function createFolderIfNotExist(folderPath) {
-  try {
-    const stats = await fs_promises.stat(folderPath);
-    if (stats.isDirectory()) {
-    } else {
-      throw new Error(`${folderPath} exists, but is not a directory.`);
+  return new Promise(async (resolve, reject) => {
+    try {
+      const stats = await fs_promises.stat(folderPath);
+      if (stats.isDirectory()) {
+        resolve();
+      } else {
+        reject(new Error(`${folderPath} exists, but is not a directory.`));
+      }
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        await fs_promises.mkdir(folderPath);
+        resolve();
+      } else {
+        reject(error);
+      }
     }
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      await fs_promises.mkdir(folderPath);
-    } else {
-      throw error;
-    }
-  }
+  });
 }
 
 const getFileWithoutExt = (str) => {
@@ -129,7 +133,7 @@ exports.filesHandler = function (files, paths) {
           fs.rmSync(folderNameUnconverted, { recursive: true, force: true });
           fs.unlinkSync(fullPath); //deletes the file.
           resp.nb_files = resp.nb_files + fileCount;
-        } else if(currentFile.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        } else {
           try {
             resp.status = await convertToPDF(fullPath, pdfDestination);
             fs.unlinkSync(fullPath); //deletes the file.
@@ -142,7 +146,7 @@ exports.filesHandler = function (files, paths) {
         }
       }
       await zipper(pathSeparator(
-        process.cwd() + "/storage/uploads"
+        process.cwd() + "/storage/uploads/"
       ), fullZipFilename);
       resp.linkToZIP = pathSeparator(config.server_address + "/zip/" + zipName);
       fs.rmSync(pdfDestination, { recursive: true, force: true });
