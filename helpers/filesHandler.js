@@ -63,8 +63,8 @@ const getZipName = () => {
   return `${dd < 9 ? `0` + dd : dd}-${mo < 9 ? `0` + mo : mo}-${yyyy}-${hh < 9 ? `0` + hh : hh}-${mm < 9 ? `0` + mm : mm}-${ss < 9 ? `0` + ss : ss}-${ms < 9 ? `0` + ms : ms}.zip`;
 };
 
-const convertor = (files, paths) => {
-  return new Promise(async (resolve) => {
+exports.filesHandler = function (files, paths) {
+  return new Promise(async (resolve, reject) => {
     let resp = {
       linkToZIP: "",
       nb_files: 0,
@@ -73,6 +73,7 @@ const convertor = (files, paths) => {
     if (typeof files !== "object" || files.length === 0) {
       resp.error = true;
       resp.error_message = "An error occured.(files)";
+      reject();
     } else {
       console.log(files);
       let pdfDestination = pathSeparator(
@@ -97,6 +98,7 @@ const convertor = (files, paths) => {
         } catch (error) {
           resp.error = true;
           resp.error_message = "An error occured: " + error;
+          reject(error);
         }
       }
       await zipper(pdfDestination, fullZipFilename);
@@ -106,5 +108,3 @@ const convertor = (files, paths) => {
     resolve(resp);
   });
 };
-
-module.exports = convertor;

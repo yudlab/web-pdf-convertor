@@ -16,19 +16,23 @@ exports.zipper = async function (sourceDir, outPutFile) {
 }
 
 function zipFolder(zip, folderPath) {
-    const files = fs.readdirSync(folderPath);
+    try {
+        const files = fs.readdirSync(folderPath);
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const filePath = path.join(folderPath, file);
-        const stats = fs.statSync(filePath);
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const filePath = path.join(folderPath, file);
+            const stats = fs.statSync(filePath);
 
-        if (stats.isDirectory()) {
-            zip.addLocalFolder(filePath);
-            zipFolder(filePath); // Recursively zip subdirectories
-        } else if (stats.isFile()) {
-            zip.addLocalFile(filePath);
+            if (stats.isDirectory()) {
+                zip.addLocalFolder(filePath);
+                zipFolder(filePath); // Recursively zip subdirectories
+            } else if (stats.isFile()) {
+                zip.addLocalFile(filePath);
+            }
         }
+    } catch (error) {
+        return new Error(error)
     }
 }
 
