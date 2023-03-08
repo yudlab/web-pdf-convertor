@@ -17,8 +17,12 @@ a {
   text-align: center;
   margin-top: 1rem;
 }
-#loader.hide {
+#loader.hide, #loader .hide {
   display: none;
+}
+#loader .info {
+  color: #e67e22;
+  font-weight: bold;
 }
 .custom-file {
   padding-top: 1rem;

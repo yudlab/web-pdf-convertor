@@ -45,8 +45,12 @@ async function createFolderIfNotExist(folderPath) {
       }
     } catch (error) {
       if (error.code === 'ENOENT') {
-        await fs_promises.mkdir(folderPath);
-        resolve();
+        try {
+          await fs_promises.mkdir(folderPath, { recursive: true });
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
       } else {
         reject(error);
       }
@@ -74,6 +78,7 @@ const getZipName = () => {
 async function recursiveConvert(unconvertedPath, convertedPath, count) {
   return new Promise(async function(resolve, reject) {
     try {
+      console.log("Count before: " + count);
       let fileCount = count;
       const files = await fs_promises.readdir(unconvertedPath);
       for (const file of files) {
@@ -83,11 +88,13 @@ async function recursiveConvert(unconvertedPath, convertedPath, count) {
           let newDirConverted = path.join(convertedPath, file);
           await createFolderIfNotExist(newDirConverted);
           let thisCount = await recursiveConvert(filePathUnconverted, newDirConverted, count);
-          fileCount += thisCount;
+          fileCount = fileCount + thisCount;
+          console.log("Count after: " + fileCount);
         } else {
           await convertToPDF(filePathUnconverted, convertedPath);
           fs.unlinkSync(filePathUnconverted); //deletes the file.
-          fileCount++
+          fileCount++;
+          console.log("Count after: " + fileCount);
         }
       }
       return resolve(fileCount);
@@ -110,7 +117,7 @@ exports.filesHandler = function (files, paths) {
       reject();
     } else {
       let pdfDestination = pathSeparator(
-        process.cwd() + "/storage/uploads/PDFs"
+        process.cwd() + "/storage/uploads/PDFs/temp"
       );
 
       await createFolderIfNotExist(pdfDestination);
@@ -145,9 +152,7 @@ exports.filesHandler = function (files, paths) {
           }
         }
       }
-      await zipper(pathSeparator(
-        process.cwd() + "/storage/uploads/"
-      ), fullZipFilename);
+      await zipper(pdfDestination, fullZipFilename);
       resp.linkToZIP = pathSeparator(config.server_address + "/zip/" + zipName);
       fs.rmSync(pdfDestination, { recursive: true, force: true });
     }

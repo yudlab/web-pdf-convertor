@@ -6,7 +6,7 @@ exports.zipper = async function (sourceDir, outPutFile) {
     return new Promise(function (resolve, reject) {
         try {
             const zip = new AdmZip();
-            zipFolder(zip, sourceDir);
+            zip.addLocalFolder(sourceDir);
             zip.writeZip(outPutFile);
             resolve();
         } catch (error) {
@@ -18,16 +18,13 @@ exports.zipper = async function (sourceDir, outPutFile) {
 function zipFolder(zip, folderPath) {
     try {
         const files = fs.readdirSync(folderPath);
-        console.log(folderPath);
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const filePath = folderPath + '/' + file;
             const stats = fs.statSync(filePath);
             if (stats.isDirectory()) {
-                console.log("--", filePath);
                 zip.addLocalFolder(filePath);
             } else if (stats.isFile()) {
-                console.log("----", filePath);
                 zip.addLocalFile(filePath);
             }
         }

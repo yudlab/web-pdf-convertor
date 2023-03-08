@@ -3,6 +3,7 @@
         <div id="loader" class="hide">
             <img src="images/1488.gif" alt="loader" />
             <span>Uploading</span>
+            <span class="info hide">This may take a while specially if you have many files/big ones.</span>
         </div>
         <div id="sub-main" class="col-sm-8 offset-2"> 
             {{#each message}}
@@ -27,6 +28,9 @@
                             if($('#fileList ul li').length > 0) {
                                 $('#sub-main').addClass('hide');
                                 $('#loader').removeClass('hide');
+                                setTimeout(function() {
+                                    $('#loader .info').removeClass('hide');
+                                }, 8000);
                             } else {
                                 alert('Please select at least a file to upload');
                             }

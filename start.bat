@@ -1,26 +1,38 @@
 @echo off
-title Checking for updates
-echo Checking for updates...
-echo ...
-echo Waiting for network availability...
+title Heating the engine...
 
-ping -n 4 www.github.com >nul
-if %errorlevel%==0 (
-    git fetch
-    git pull
-    if %errorlevel%==1 (
-        echo Repository has been updated.
-        echo Starting server...
-        node ./bin/www
+if "%1"=="" (
+    title Checking for updates
+    echo Checking for updates...
+    echo Waiting for network availability...
+    ping -n 4 www.github.com >nul
+    if %errorlevel%==0 (
+        git fetch
+        git pull
+        if %errorlevel%==1 (
+            echo Repository has been updated.
+            start.bat --updated
+            exit
+            echo Starting server...
+            node ./bin/www
+        ) else (
+            echo Repository is up to date.
+            echo Starting server...
+            node ./bin/www
+        )
     ) else (
-        echo Repository is up to date.
+        REM Internet is not accessible, do something else here
+        title Web file convertor
+        echo Internet is not accessible.
+        echo Update skipped.
         echo Starting server...
         node ./bin/www
     )
 ) else (
-    REM Internet is not accessible, do something else here
-    echo Internet is not accessible.
-    echo Update skipped.
+    echo Repository updated...
+    git log -1
+    timeout>nul /t 2
+    cls
     echo Starting server...
     node ./bin/www
 )
