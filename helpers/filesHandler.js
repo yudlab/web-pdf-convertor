@@ -73,14 +73,13 @@ const getZipName = () => {
   var ss = today.getSeconds();
   var ms = today.getMilliseconds();
 
-  return `${dd < 9 ? `0` + dd : dd}-${mo < 9 ? `0` + mo : mo}-${yyyy}-${hh < 9 ? `0` + hh : hh}-${mm < 9 ? `0` + mm : mm}-${ss < 9 ? `0` + ss : ss}-${ms < 9 ? `0` + ms : ms}.zip`;
+  return `${dd < 9 ? `0` + dd : dd}-${mo < 9 ? `0` + mo : mo}-${yyyy}--${hh < 9 ? `0` + hh : hh}-${mm < 9 ? `0` + mm : mm}-${ss < 9 ? `0` + ss : ss}-${ms < 9 ? `0` + ms : ms}.zip`;
 };
 
-async function recursiveConvert(unconvertedPath, convertedPath, count) {
+async function recursiveConvert(unconvertedPath, convertedPath) {
   return new Promise(async function(resolve, reject) {
     try {
-      console.log("Count before: " + count);
-      let fileCount = count;
+      let fileCount = 0;
       const files = await fs_promises.readdir(unconvertedPath);
       for (const file of files) {
         const filePathUnconverted = path.join(unconvertedPath, file);
@@ -88,15 +87,16 @@ async function recursiveConvert(unconvertedPath, convertedPath, count) {
         if (stat.isDirectory()) {
           let newDirConverted = path.join(convertedPath, file);
           await createFolderIfNotExist(newDirConverted);
-          let thisCount = await recursiveConvert(filePathUnconverted, newDirConverted, count);
+          let thisCount = await recursiveConvert(filePathUnconverted, newDirConverted, fileCount);
           fileCount = fileCount + thisCount;
-          console.log("Count after: " + fileCount);
+          console.log("Nested Recursive Count after: " + fileCount);
         } else {
           await convertToPDF(filePathUnconverted, convertedPath);
           fs.unlinkSync(filePathUnconverted); //deletes the file.
           fileCount++;
           console.log("Count after: " + fileCount);
         }
+        console.log("Recursive Count before: " + fileCount);
       }
       return resolve(fileCount);
     } catch (error) {
@@ -128,6 +128,7 @@ exports.filesHandler = function (files, paths) {
       let fullZipFilename = pathSeparator(zipDestination + "/" + zipName);
 
       for (var i = 0; i < files.length; i++) {
+        let fileCount = 0;
         let currentFile = files[i];
         let fullPath = pathSeparator( process.cwd() + "/storage/uploads/" + currentFile.filename );
         if(currentFile.mimetype === "application/x-zip-compressed") {
@@ -137,10 +138,11 @@ exports.filesHandler = function (files, paths) {
           await createFolderIfNotExist(folderNameUnconverted);
           await createFolderIfNotExist(zipFolder);
           await unzipper(fullPath, folderNameUnconverted);
-          let fileCount = await recursiveConvert(folderNameUnconverted, zipFolder, resp.nb_files);
+          fileCount = await recursiveConvert(folderNameUnconverted, zipFolder);
           fs.rmSync(folderNameUnconverted, { recursive: true, force: true });
           fs.unlinkSync(fullPath); //deletes the file.
           resp.nb_files = resp.nb_files + fileCount;
+          console.log("This count(recursive zip) is: " + resp.nb_files);
         } else {
           try {
             resp.status = await convertToPDF(fullPath, pdfDestination);

@@ -13,8 +13,6 @@ if "%1"=="" (
             echo Repository has been updated.
             start.bat --updated
             exit
-            echo Starting server...
-            node ./bin/www
         ) else (
             echo Repository is up to date.
             echo Starting server...
@@ -31,7 +29,7 @@ if "%1"=="" (
 ) else (
     echo Repository updated...
     git log -1
-    timeout>nul /t 2
+    timeout>nul /t 5
     cls
     echo Starting server...
     node ./bin/www
