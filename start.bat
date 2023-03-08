@@ -9,8 +9,7 @@ if "%1"=="" (
     if %errorlevel%==0 (
         git fetch
         git pull
-        if %errorlevel%==0 (
-            echo Repository has been updated.
+        if %errorlevel%==1 (
             start.bat --updated
             exit
         ) else (
