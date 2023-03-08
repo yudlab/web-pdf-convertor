@@ -46,7 +46,6 @@ async function createFolderIfNotExist(folderPath) {
     } catch (error) {
       if (error.code === 'ENOENT') {
         try {
-          console.log("Creating folder: " + folderPath);
           await fs_promises.mkdir(folderPath, { recursive: true });
           resolve();
         } catch (error) {
@@ -89,14 +88,11 @@ async function recursiveConvert(unconvertedPath, convertedPath) {
           await createFolderIfNotExist(newDirConverted);
           let thisCount = await recursiveConvert(filePathUnconverted, newDirConverted, fileCount);
           fileCount = fileCount + thisCount;
-          console.log("Nested Recursive Count after: " + fileCount);
         } else {
           await convertToPDF(filePathUnconverted, convertedPath);
           fs.unlinkSync(filePathUnconverted); //deletes the file.
           fileCount++;
-          console.log("Count after: " + fileCount);
         }
-        console.log("Recursive Count before: " + fileCount);
       }
       return resolve(fileCount);
     } catch (error) {
@@ -142,7 +138,6 @@ exports.filesHandler = function (files, paths) {
           fs.rmSync(folderNameUnconverted, { recursive: true, force: true });
           fs.unlinkSync(fullPath); //deletes the file.
           resp.nb_files = resp.nb_files + fileCount;
-          console.log("This count(recursive zip) is: " + resp.nb_files);
         } else {
           try {
             resp.status = await convertToPDF(fullPath, pdfDestination);

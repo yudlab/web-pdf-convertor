@@ -2,14 +2,14 @@
 title Heating the engine...
 
 if "%1"=="" (
-    title Checking for updates
+    title Web file convertor
     echo Checking for updates...
     echo Waiting for network availability...
     ping -n 4 www.github.com >nul
     if %errorlevel%==0 (
         git fetch
         git pull
-        if %errorlevel%==1 (
+        if %errorlevel%==0 (
             echo Repository has been updated.
             start.bat --updated
             exit
@@ -20,7 +20,6 @@ if "%1"=="" (
         )
     ) else (
         REM Internet is not accessible, do something else here
-        title Web file convertor
         echo Internet is not accessible.
         echo Update skipped.
         echo Starting server...

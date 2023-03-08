@@ -1,6 +1,5 @@
 const AdmZip = require('adm-zip');
 const fs = require('fs');
-const path = require('path');
 
 exports.zipper = async function (sourceDir, outPutFile) {
     return new Promise(function (resolve, reject) {
