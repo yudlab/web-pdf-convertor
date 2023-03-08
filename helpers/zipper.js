@@ -39,6 +39,8 @@ function zipFolder(zip, folderPath) {
 exports.unzipper = async function (inputFile, outputDir) {
     return new Promise(function (resolve, reject) {
         try {
+            console.log("Unzipping input file: " + inputFile);
+            console.log("Unzipping output dir: " + outputDir);
             var zip = new AdmZip(inputFile);
             zip.extractAllTo(outputDir, true);
             resolve();

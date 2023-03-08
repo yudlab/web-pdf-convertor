@@ -1,7 +1,9 @@
-const { exec } = require("child_process");
-var fs = require("fs");
+
+const fs = require("fs");
+const fs_promises = require('fs').promises;
 require('dotenv').config()
-const { zipper } = require("./zipper");
+const { zipper, unzipper } = require("./zipper");
+const { convertToPDF } = require("./convertor");
 
 function getIPAddress() {
   var interfaces = require("os").networkInterfaces();
@@ -22,32 +24,36 @@ function getIPAddress() {
 }
 
 const config = {
-  libreOfficeExe: process.env.LIBREOFFICE_EXE,
   server_address: `http://${getIPAddress()}:3000`,
 };
 
-console.error("Serving web service at: ", config.server_address);
+console.info("Serving web service at: ", config.server_address);
 
 const pathSeparator = (path) => {
   return path.replace(/\\/g, `/`);
 };
 
-function execPromise(command) {
-  return new Promise(function (resolve, reject) {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-        return;
-      }
+async function createFolderIfNotExist(folderPath) {
+  try {
+    const stats = await fs_promises.stat(folderPath);
+    if (stats.isDirectory()) {
+      console.log(`${folderPath} already exists.`);
+    } else {
+      throw new Error(`${folderPath} exists, but is not a directory.`);
+    }
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log(`${folderPath} does not exist. Creating it now...`);
+      await fs_promises.mkdir(folderPath);
+      console.log(`${folderPath} created successfully.`);
+    } else {
+      throw error;
+    }
+  }
+}
 
-      if (stderr) {
-        reject(stderr);
-        return;
-      }
-
-      resolve(stdout);
-    });
-  });
+const getFileWithoutExt = (str) => {
+  return str.replace(/\.[^/.]+$/, "");
 }
 
 const getZipName = () => {
@@ -79,6 +85,9 @@ exports.filesHandler = function (files, paths) {
       let pdfDestination = pathSeparator(
         process.cwd() + "/storage/uploads/PDFs"
       );
+
+      await createFolderIfNotExist(pdfDestination);
+
       let zipDestination = pathSeparator(process.cwd() + "/public/zip");
       let zipName = getZipName();
       let fullZipFilename = pathSeparator(zipDestination + "/" + zipName);
@@ -86,24 +95,32 @@ exports.filesHandler = function (files, paths) {
       console.log(fullZipFilename);
 
       for (var i = 0; i < files.length; i++) {
-        let fullPath = pathSeparator(
-          process.cwd() + "/storage/uploads/" + files[i].filename
-        );
-        try {
-          resp.status = await execPromise(
-            `${config.libreOfficeExe} --headless --convert-to pdf --outdir "${pdfDestination}" "${fullPath}"`
-          );
-          fs.unlinkSync(fullPath); //deletes the file.
-          resp.nb_files = resp.nb_files + 1;
-        } catch (error) {
-          resp.error = true;
-          resp.error_message = "An error occured: " + error;
-          reject(error);
+        let currentFile = files[i];
+        let fullPath = pathSeparator( process.cwd() + "/storage/uploads/" + currentFile.filename );
+        if(currentFile.mimetype === "application/x-zip-compressed") {
+          //unzip to folder using zip name as folder name
+          let zipFolder = pdfDestination + "/" + getFileWithoutExt(currentFile.filename);
+          let folderNameUnconverted = zipFolder + "_unconverted";
+          await createFolderIfNotExist(folderNameUnconverted);
+          await createFolderIfNotExist(zipFolder);
+          await unzipper(fullPath, folderNameUnconverted);
+          //await recursiveConvert(folderNameUnconverted, zipFolder);
+          //create same structure and convert them.
+        } else if(currentFile.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+          try {
+            resp.status = await convertToPDF(fullPath, pdfDestination);
+            fs.unlinkSync(fullPath); //deletes the file.
+            resp.nb_files = resp.nb_files + 1;
+          } catch (error) {
+            resp.error = true;
+            resp.error_message = "An error occured: " + error;
+            reject(error);
+          }
         }
       }
       await zipper(pdfDestination, fullZipFilename);
       resp.linkToZIP = pathSeparator(config.server_address + "/zip/" + zipName);
-      fs.rmSync(pdfDestination, { recursive: true, force: true });
+      //fs.rmSync(pdfDestination, { recursive: true, force: true });
     }
     resolve(resp);
   });

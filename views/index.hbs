@@ -8,7 +8,6 @@
             {{#each message}}
                 <p class="alert alert-{{@key}}">{{ this.[0] }}</p>
                 <p class="alert alert-info"><a href="{{this.[1]}}">{{ this.[1] }}</a></p>
-                <p>{{ this.[2] }}</p>
             {{/each}}
             <div class="row">
                 <div class="col-md-12">
@@ -22,7 +21,7 @@
                                 children += '<li>' + input.files.item(i).name + '</li>';
                             }
                             output.innerHTML = '<ul>'+children+'</ul>';
-                            $("#fileCount, #upload-label").text(`${i} ${i > 0 ? 'files' : 'file'} added`);
+                            $("#fileCount, #upload-label").text(`${i} ${i > 1 ? 'files' : 'file'} added`);
                         }
                         addLoader = function() {
                             if($('#fileList ul li').length > 0) {
