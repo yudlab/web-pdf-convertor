@@ -41,11 +41,12 @@ async function createFolderIfNotExist(folderPath) {
       if (stats.isDirectory()) {
         resolve();
       } else {
-        reject(new Error(`${folderPath} exists, but is not a directory.`));
+        throw new Error(`${folderPath} exists, but is not a directory.`);
       }
     } catch (error) {
       if (error.code === 'ENOENT') {
         try {
+          console.log("Creating folder: " + folderPath);
           await fs_promises.mkdir(folderPath, { recursive: true });
           resolve();
         } catch (error) {
