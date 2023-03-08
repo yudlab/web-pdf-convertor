@@ -38,15 +38,12 @@ async function createFolderIfNotExist(folderPath) {
   try {
     const stats = await fs_promises.stat(folderPath);
     if (stats.isDirectory()) {
-      console.log(`${folderPath} already exists.`);
     } else {
       throw new Error(`${folderPath} exists, but is not a directory.`);
     }
   } catch (error) {
     if (error.code === 'ENOENT') {
-      console.log(`${folderPath} does not exist. Creating it now...`);
       await fs_promises.mkdir(folderPath);
-      console.log(`${folderPath} created successfully.`);
     } else {
       throw error;
     }
@@ -108,7 +105,6 @@ exports.filesHandler = function (files, paths) {
       resp.error_message = "An error occured.(files)";
       reject();
     } else {
-      console.log(files);
       let pdfDestination = pathSeparator(
         process.cwd() + "/storage/uploads/PDFs"
       );
@@ -118,8 +114,6 @@ exports.filesHandler = function (files, paths) {
       let zipDestination = pathSeparator(process.cwd() + "/public/zip");
       let zipName = getZipName();
       let fullZipFilename = pathSeparator(zipDestination + "/" + zipName);
-
-      console.log(fullZipFilename);
 
       for (var i = 0; i < files.length; i++) {
         let currentFile = files[i];
@@ -132,7 +126,6 @@ exports.filesHandler = function (files, paths) {
           await createFolderIfNotExist(zipFolder);
           await unzipper(fullPath, folderNameUnconverted);
           let fileCount = await recursiveConvert(folderNameUnconverted, zipFolder, resp.nb_files);
-          console.log("filecount is: ", fileCount);
           fs.rmSync(folderNameUnconverted, { recursive: true, force: true });
           fs.unlinkSync(fullPath); //deletes the file.
           resp.nb_files = resp.nb_files + fileCount;
@@ -148,9 +141,11 @@ exports.filesHandler = function (files, paths) {
           }
         }
       }
-      await zipper(pdfDestination, fullZipFilename);
+      await zipper(pathSeparator(
+        process.cwd() + "/storage/uploads"
+      ), fullZipFilename);
       resp.linkToZIP = pathSeparator(config.server_address + "/zip/" + zipName);
-      //fs.rmSync(pdfDestination, { recursive: true, force: true });
+      fs.rmSync(pdfDestination, { recursive: true, force: true });
     }
     resolve(resp);
   });
