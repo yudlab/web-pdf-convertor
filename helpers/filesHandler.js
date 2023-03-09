@@ -148,6 +148,17 @@ exports.filesHandler = function (files, paths) {
             resp.error_message = "An error occured: " + error;
             reject(error);
           }
+          if(files.length === 1) {
+            let pdfName = pdfDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`;
+            let pdfOut = zipDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`;
+            console.log("1 file, PDF is: " + pdfName);
+            console.log("Out is: " + pdfOut);
+            await fs_promises.rename(pdfName, pdfOut);
+            resp.linkToZIP = pathSeparator(config.server_address + `/zip/${getFileWithoutExt(files[0].filename)}.pdf`);
+            fs.rmSync(pdfDestination, { recursive: true, force: true });
+            resolve(resp);
+            return;
+          }
         }
       }
       await zipper(pdfDestination, fullZipFilename);
