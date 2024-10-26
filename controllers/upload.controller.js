@@ -7,7 +7,7 @@ exports.index = (req, res) => {
 exports.uploadMultiple = async (req, res) => {
     if (req.files.length) {
         try {
-            const resp = await filesHandler(req.files);
+            const resp = await filesHandler(req);
             if ( resp.error ){
                 req.flash('error', `An error occured: \n\n${resp.error_message}`);
             } else {

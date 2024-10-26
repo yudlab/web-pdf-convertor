@@ -5,6 +5,7 @@ taskkill>nul /f /im node.exe
 if "%1"=="" (
     title Web file convertor
     :wifiCheck
+    cls
     echo Checking Wi-Fi Connection...
     netsh wlan show interfaces | findstr /i "State" | findstr /i "connected" >nul
     if %errorlevel%==0 (
@@ -30,13 +31,16 @@ if "%1"=="" (
         echo An error occured.
         echo It looks like you are not connected to a network.
         echo Check your network connection and press any to continue...
-        pause
+        pause>nul
         goto :wifiCheck
     )
 ) else (
     echo Repository updated...
     git log -1
     timeout>nul /t 2
+    echo Installing dependencies...
+    echo This may take a while.
+    npm install
     cls
     echo Starting server...
     npm run start

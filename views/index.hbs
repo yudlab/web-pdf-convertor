@@ -3,7 +3,7 @@
         <div id="loader" class="hide">
             <img src="images/1488.gif" alt="loader" />
             <span>Uploading</span>
-            <span class="info hide">This may take a while specially if you have many files/big ones.</span>
+            <span class="info hide">This may take a while especially if you have many files/big ones.</span>
         </div>
         <div id="sub-main" class="col-sm-8 offset-2"> 
             {{#each message}}
@@ -18,14 +18,14 @@
                             var output = document.getElementById('fileList');
                             var children = "";
                             var i; 
-                            for (i = 0;i < input.files.length; ++i) {
+                            for (i = 0; i < input.files.length; ++i) {
                                 children += '<li>' + input.files.item(i).name + '</li>';
                             }
-                            output.innerHTML = '<ul>'+children+'</ul>';
+                            output.innerHTML = '<ul>' + children + '</ul>';
                             $("#fileCount, #upload-label").text(`${i} ${i > 1 ? 'files' : 'file'} added`);
                         }
                         addLoader = function() {
-                            if($('#fileList ul li').length > 0) {
+                            if ($('#fileList ul li').length > 0) {
                                 $('#sub-main').addClass('hide');
                                 $('#loader').removeClass('hide');
                                 setTimeout(function() {
@@ -46,6 +46,13 @@
                                 <button type="submit" class="btn btn-primary float-right mr-2" onclick="javascript:addLoader()">Upload <i class="fa fa-upload"></i></button>
                             </div>
                         </div>
+
+                        <!-- Checkbox for merging PDFs -->
+                        <div class="form-check mt-3">
+                            <input type="checkbox" class="form-check-input" id="mergeCheckbox" name="mergeFiles">
+                            <label class="form-check-label" for="mergeCheckbox">Merge all PDFs into one</label>
+                        </div>
+
                         <div class="row">
                             <div class="custom-file col-md-6">
                                 <span id="fileCount"></span>
