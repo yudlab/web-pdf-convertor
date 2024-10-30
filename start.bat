@@ -45,3 +45,4 @@ if "%1"=="" (
     echo Starting server...
     npm run start
 )
+pause

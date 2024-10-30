@@ -11,7 +11,7 @@ exports.uploadMultiple = async (req, res) => {
             if ( resp.error ){
                 req.flash('error', `An error occured: \n\n${resp.error_message}`);
             } else {
-                req.flash('success', [`${resp.nb_files} ${resp.nb_files > 1 ? 'files' : 'file'} converted, click on the link below to download.`, `${resp.linkToZIP}`, `${resp.status}`]);
+                req.flash('success', [`${resp.nb_files} ${resp.nb_files > 1 ? 'files' : 'file'} converted, click on the link below to download.`, `${resp.linkToFile}`, `${resp.status}`]);
             }
         } catch (error) {
             return new Error(error)
