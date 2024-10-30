@@ -8,6 +8,7 @@ function convertToPDF(filename, destination) {
             reject(new Error("LibreOffice not found."));
         }
         if(filename !== undefined && destination !== undefined) {
+            console.log("Converting: ", {in: filename, out: destination})
             exec(`${process.env.LIBREOFFICE_EXE} --headless --convert-to pdf --outdir "${destination}" "${filename}"`, (error, stdout, stderr) => {
                 if (error) {
                     reject(error);
