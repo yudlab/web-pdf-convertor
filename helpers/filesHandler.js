@@ -1,3 +1,14 @@
+/* Todo - Improvement:
+Gather all path of PDFs and send all of them as an array to convertPDF function
+ instead of looping for each uploaded files and converting them individually
+
+soffice --headless --convert-to pdf --outdir /path/to/output file1.docx file2.docx file3.docx
+
+*/
+
+
+
+
 
 const fs = require("fs");
 const fs_promises = require('fs').promises;
