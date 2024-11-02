@@ -7,6 +7,7 @@ if "%1"=="" (
     :wifiCheck
     cls
     echo Checking Wi-Fi Connection...
+    timeout>nul /t 3
     netsh wlan show interfaces | findstr /i "State" | findstr /i "connected" >nul
     if %errorlevel%==0 (
         echo Connected to network.

@@ -36,6 +36,7 @@ const pathSeparator = (path) => {
 };
 
 async function createFolderIfNotExist(folderPath) {
+  console.log("createFolderIfNotExist: ", folderPath)
   return new Promise(async (resolve, reject) => {
     try {
       const stats = await fs_promises.stat(folderPath);
@@ -77,6 +78,7 @@ const generateFileName = () => {
 };
 
 async function recursiveConvert(unconvertedPath, convertedPath) {
+  console.log("recursiveConvert: ", {unconvertedPath, convertedPath})
   return new Promise(async function(resolve, reject) {
     try {
       let fileCount = 0;
@@ -149,13 +151,13 @@ exports.filesHandler = function (req) {
         if (currentFile.mimetype === "application/x-zip-compressed") {
           // Unzip and convert
           // Unzip to folder using zip name as folder name
-          let zipFolder = pdfDestination + "/" + getFileWithoutExt(currentFile.filename);
-          let folderNameUnconverted = zipFolder + "_unconverted";
+          let zipFolder = pathSeparator(pdfDestination + "/" + getFileWithoutExt(currentFile.filename));
+          let folderNameUnconverted = pathSeparator(zipFolder + "_unconverted");
           await createFolderIfNotExist(folderNameUnconverted);
           await createFolderIfNotExist(zipFolder);
           await unzipper(fullPath, folderNameUnconverted);
           let fileCount = await recursiveConvert(folderNameUnconverted, zipFolder);
-          fs.rmSync(folderNameUnconverted, { recursive: true, force: true });
+          fs.rmSync(folderNameUnconverted, { recursive: true, force: true }); // Delete the folder
           fs.unlinkSync(fullPath); // Deletes the file.
           resp.nb_files += fileCount;
 
@@ -164,13 +166,16 @@ exports.filesHandler = function (req) {
           //   console.log(file)
           // }));
           // But skip DIRECTORY
+        } else if(currentFile.mimetype === "application/pdf" && mergeFiles) {
+          // Handles PDF if merging
+          pdfPaths.push(pathSeparator(pdfDestination + '/' + currentFile.filename));
         } else { // Not a ZIP
           try {
             resp.status = await convertToPDF(fullPath, pdfDestination);
             fs.unlinkSync(fullPath); // Deletes the original file.
             resp.nb_files += 1;
             // Collect paths for merging
-            //pdfPaths.push(pathSeparator(pdfDestination + '/' + getFileWithoutExt(currentFile.filename) + '.pdf'));
+            pdfPaths.push(pathSeparator(pdfDestination + '/' + getFileWithoutExt(currentFile.filename) + '.pdf'));
           } catch (error) {
             resp.error = true;
             resp.error_message = "An error occurred: " + error;
@@ -179,7 +184,7 @@ exports.filesHandler = function (req) {
         }
       }
 
-      if(files.length > 1 && !mergeFiles) {
+      if(files.length > 0 && !mergeFiles) {
         console.log("init 1")
         // If processing ZIPS
         let zipName = generateFileName() + ".zip";
@@ -192,8 +197,8 @@ exports.filesHandler = function (req) {
       } else if(files.length === 1 && files[0].mimetype !== "application/x-zip-compressed"){
         console.log("init 2")
         // move the file to public
-        let pdfName = pdfDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`;
-        let pdfOut = fileDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`;
+        let pdfName = pathSeparator(pdfDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`);
+        let pdfOut = pathSeparator(fileDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`);
         await fs.promises.rename(pdfName, pdfOut);
         resp.linkToFile = pathSeparator(config.server_address + `/document/${getFileWithoutExt(files[0].filename)}.pdf`);
         fs.rmSync(pdfDestination, { recursive: true, force: true });
