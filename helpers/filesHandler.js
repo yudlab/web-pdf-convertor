@@ -6,6 +6,7 @@ const { zipper, unzipper } = require("./zipper");
 const { convertToPDF } = require("./convertor");
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
+const { pathSeparator } = require('./functions');
 
 function getIPAddress() {
   var interfaces = require("os").networkInterfaces();
@@ -27,13 +28,18 @@ function getIPAddress() {
 
 const config = {
   server_address: `http://${getIPAddress()}:3000`,
+  pdfDestination: pathSeparator(process.cwd() + "/storage/uploads/PDFs/temp"),
+  fileDestination: pathSeparator(process.cwd() + "/public/document")
 };
+
 
 console.info("Serving web service at: ", config.server_address);
 
-const pathSeparator = (path) => {
-  return path.replace(/\\/g, `/`);
-};
+(async () => {
+  console.log("Cleaning old files...");
+  await fs_promises.rm(config.fileDestination, { recursive: true, force: true });
+  await fs_promises.mkdir(config.fileDestination, { recursive: true });
+})()
 
 async function createFolderIfNotExist(folderPath) {
   console.log("createFolderIfNotExist: ", folderPath)
@@ -93,7 +99,8 @@ async function recursiveConvert(unconvertedPath, convertedPath) {
           fileCount = fileCount + thisCount;
         } else {
           await convertToPDF(filePathUnconverted, convertedPath);
-          fs.unlinkSync(filePathUnconverted); //deletes the file.
+          // Deletes the original file.
+          await fs_promises.unlink(filePathUnconverted);
           fileCount++;
         }
       }
@@ -148,33 +155,29 @@ exports.filesHandler = function (req) {
       resp.error_message = "An error occurred. (files)";
       reject(resp);
     } else {
-      let pdfDestination = pathSeparator(
-        process.cwd() + "/storage/uploads/PDFs/temp"
-      );
 
-      let fileDestination = pathSeparator(process.cwd() + "/public/document");
-
-      await createFolderIfNotExist(pdfDestination);
-      await createFolderIfNotExist(fileDestination);
+      await createFolderIfNotExist(config.pdfDestination);
+      await createFolderIfNotExist(config.fileDestination);
 
       const pdfPaths = []; // Array to store paths of the converted PDF
       // collect the paths only when merging?
 
-      //Recursively convert and saves the PDFs to public folder.
+      //Recursively convert and saves the PDFs to temp folder.
       for (let i = 0; i < files.length; i++) {
         let currentFile = files[i];
         let fullPath = pathSeparator(process.cwd() + "/storage/uploads/" + currentFile.filename);
 
         if (currentFile.mimetype === "application/x-zip-compressed") {
           // Unzip and convert
-          let zipFolder = pathSeparator(pdfDestination + "/" + getFileWithoutExt(currentFile.filename));
+          let zipFolder = pathSeparator(config.pdfDestination + "/" + getFileWithoutExt(currentFile.filename));
           let folderNameUnconverted = pathSeparator(zipFolder + "_unconverted");
           await createFolderIfNotExist(folderNameUnconverted);
           await createFolderIfNotExist(zipFolder);
           await unzipper(fullPath, folderNameUnconverted);
           let fileCount = await recursiveConvert(folderNameUnconverted, zipFolder);
-          fs.rmSync(folderNameUnconverted, { recursive: true, force: true });
-          fs.unlinkSync(fullPath);
+
+          await fs_promises.unlink(fullPath);
+          await fs_promises.rm(folderNameUnconverted, { recursive: true, force: true });
           resp.nb_files += fileCount;
       
           if(mergeFiles){
@@ -183,15 +186,16 @@ exports.filesHandler = function (req) {
           }
         } else if (currentFile.mimetype === "application/pdf" && mergeFiles) {
           // Handles PDF if merging
-          pdfPaths.push(pathSeparator(pdfDestination + '/' + currentFile.filename));
+          pdfPaths.push(fullPath);
         } else { // Not a ZIP
           try {
-            resp.status = await convertToPDF(fullPath, pdfDestination);
-            fs.unlinkSync(fullPath); // Deletes the original file.
+            resp.status = await convertToPDF(fullPath, config.pdfDestination);
+            // Deletes the original file.
+            await fs_promises.unlink(fullPath);
             resp.nb_files += 1;
             if(mergeFiles){
               // Collect paths for merging
-              pdfPaths.push(pathSeparator(pdfDestination + '/' + getFileWithoutExt(currentFile.filename) + '.pdf'));
+              pdfPaths.push(pathSeparator(config.pdfDestination + '/' + getFileWithoutExt(currentFile.filename) + '.pdf'));
             }
           } catch (error) {
             resp.error = true;
@@ -201,30 +205,29 @@ exports.filesHandler = function (req) {
         }
       }
 
+      // Move from temp folder to public folder
       if (files.length > 0 && !mergeFiles) {
         console.log("init 1")
         // If processing ZIPS
         let zipName = generateFileName() + ".zip";
-        let fullZipFilename = pathSeparator(fileDestination + "/" + zipName);
+        let fullZipFilename = pathSeparator(config.fileDestination + "/" + zipName);
         // ZIP everything for more than 2 files
-        await zipper(pdfDestination, fullZipFilename);
+        await zipper(config.pdfDestination, fullZipFilename);
         resp.linkToFile = pathSeparator(config.server_address + "/document/" + zipName);
-        fs.rmSync(pdfDestination, { recursive: true, force: true });
         resolve(resp);
       } else if (files.length === 1 && files[0].mimetype !== "application/x-zip-compressed") {
         console.log("init 2")
         // move the file to public
-        let pdfName = pathSeparator(pdfDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`);
-        let pdfOut = pathSeparator(fileDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`);
+        let pdfName = pathSeparator(config.pdfDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`);
+        let pdfOut = pathSeparator(config.fileDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`);
         await fs.promises.rename(pdfName, pdfOut);
         resp.linkToFile = pathSeparator(config.server_address + `/document/${getFileWithoutExt(files[0].filename)}.pdf`);
-        fs.rmSync(pdfDestination, { recursive: true, force: true });
         resolve(resp);
       } else if (mergeFiles) {
         console.log("init 3")
         if (pdfPaths.length > 0) {
           let mergedPDFFilename = `${generateFileName()}-merged.pdf`;
-          const mergedPDFPath = pathSeparator(fileDestination + '/' + mergedPDFFilename);
+          const mergedPDFPath = pathSeparator(config.fileDestination + '/' + mergedPDFFilename);
           await mergePDFs(pdfPaths, mergedPDFPath); // Call the merge function
           resp.linkToFile = pathSeparator(config.server_address + `/document/${mergedPDFFilename}`); // Update link for merged PDF
           resolve(resp);
@@ -232,6 +235,10 @@ exports.filesHandler = function (req) {
           reject("Error")
         }
       }
+
+      
+      // Deletes all temp files
+      await fs_promises.rm(config.pdfDestination, { recursive: true, force: true });
     }
   });
 };
