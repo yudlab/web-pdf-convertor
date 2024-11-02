@@ -6,32 +6,17 @@ const { zipper, unzipper } = require("./zipper");
 const { convertToPDF } = require("./convertor");
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
-const { pathSeparator } = require('./functions');
-
-function getIPAddress() {
-  var interfaces = require("os").networkInterfaces();
-  for (var devName in interfaces) {
-    var iface = interfaces[devName];
-
-    for (var i = 0; i < iface.length; i++) {
-      var alias = iface[i];
-      if (
-        alias.family === "IPv4" &&
-        alias.address !== "127.0.0.1" &&
-        !alias.internal
-      )
-        return alias.address;
-    }
-  }
-  return "localhost";
-}
+const { pathSeparator,
+        generateFileName,
+        getIPAddress,
+        getFileWithoutExt
+      } = require('./functions');
 
 const config = {
   server_address: `http://${getIPAddress()}:3000`,
   pdfDestination: pathSeparator(process.cwd() + "/storage/uploads/PDFs/temp"),
   fileDestination: pathSeparator(process.cwd() + "/public/document")
 };
-
 
 console.info("Serving web service at: ", config.server_address);
 
@@ -65,23 +50,6 @@ async function createFolderIfNotExist(folderPath) {
     }
   });
 }
-
-const getFileWithoutExt = (str) => {
-  return str.replace(/\.[^/.]+$/, "");
-}
-
-const generateFileName = () => {
-  const today = new Date();
-  var dd = today.getDate();
-  var mo = today.getMonth() + 1; //January is 0!
-  var yyyy = today.getFullYear();
-  var hh = today.getHours();
-  var mm = today.getMinutes();
-  var ss = today.getSeconds();
-  var ms = today.getMilliseconds();
-
-  return `${dd < 9 ? `0` + dd : dd}-${mo < 9 ? `0` + mo : mo}-${yyyy}--${hh < 9 ? `0` + hh : hh}-${mm < 9 ? `0` + mm : mm}-${ss < 9 ? `0` + ss : ss}-${ms < 9 ? `0` + ms : ms}`;
-};
 
 async function recursiveConvert(unconvertedPath, convertedPath) {
   console.log("recursiveConvert: ", { unconvertedPath, convertedPath })
