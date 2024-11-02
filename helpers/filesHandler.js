@@ -174,7 +174,7 @@ exports.filesHandler = function (req) {
       }
 
       // Move from temp folder to public folder
-      if (files.length > 0 && !mergeFiles) {
+      if (!mergeFiles && resp.nb_files > 1) {
         console.log("init 1")
         // If processing ZIPS
         let zipName = generateFileName() + ".zip";
@@ -183,7 +183,7 @@ exports.filesHandler = function (req) {
         await zipper(config.pdfDestination, fullZipFilename);
         resp.linkToFile = pathSeparator(config.server_address + "/document/" + zipName);
         resolve(resp);
-      } else if (files.length === 1 && files[0].mimetype !== "application/x-zip-compressed") {
+      } else if (resp.nb_files === 1 && files[0].mimetype !== "application/x-zip-compressed") {
         console.log("init 2")
         // move the file to public
         let pdfName = pathSeparator(config.pdfDestination + `/${getFileWithoutExt(files[0].filename)}.pdf`);
